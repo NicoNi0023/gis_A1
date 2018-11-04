@@ -1,0 +1,71 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+plot(cars)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
+
+## R Map
+```{r}
+install.packages("tidyverse")
+library(tidyverse)
+install.packages("sf")
+library(sf)
+install.packages("geojsonio")
+library(geojsonio)
+install.packages("tmap")
+library(tmap)
+install.packages("tmaptools")
+library(tmaptools)
+install.packages("reshape2")
+library(reshape2)
+install.packages("dplyr")
+library(dplyr)
+
+LeedsIMD <- read_shape("N:/GIS/gis_A1/IMD/shapefiles/E08000035.shp", as.sf = TRUE)
+#rm (Leedsmap)
+LeedsAHAHmap<- read_shape("N:/GIS/gis_A1/AHAH/shapefiles/E08000035.shp", as.sf = TRUE)
+
+AHAHCSV <- read_csv("N:/GIS/gis_A1/AHAH/tables/E08000035.csv")
+
+LeedsIMDNeed <- LeedsIMD[,c(1,4:10)]
+LeedsAHAHData <- left_join(LeedsAHAHmap,AHAHCSV,by = c("lsoa11cd" = "lsoa11cd"))
+AHAHDataNeeds <- LeedsAHAHData[,c(1,5)]
+DataNeeds <- st_join(AHAHDataNeeds,LeedsIMDNeed)
+
+DataNeeds$income <- DataNeeds$income*100
+DataNeeds$employment <- DataNeeds$employment*100
+DataNeeds$health <- DataNeeds$health*10
+DataNeeds$crime <- DataNeeds$crime*100
+
+Leeds_melt <- melt(DataNeeds,id.vars = 3, measure.vars = c(2,4:10))
+Leeds_melt <- left_join(Leeds_melt,DataNeeds,by = c("LSOA11CD" = "lsoa11cd"))
+Leeds_melt <- Leeds_melt[,c(1:3,13)]
+
+Leeds_melt <- st_as_sf(Leeds_melt)
+tmap_mode("plot")
+qtm(Leeds_melt, fill = "value", by = "variable",  borders = NULL, size = .5)
+
+
+```
+
+
+
+## ArchGis Map
+![Leeds map of Green Accessibility level adn income level](N:/GIS/gis_A1/A1_qgis.png)
+
+
+
